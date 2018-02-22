@@ -60,4 +60,4 @@ necessary.
 
 As an extra step, I created a service that would aggregate a list of errors within the past 24 hours at the end of the day. Looking at the
 daily report enough times, a pattern begins to emerge. When a problem occurs, I can respond to it before the users complain. Sometimes, the
-report can do checks or display patterns that are unusual and this can help us anticipate possible issues.
+report can do checks or display patterns that are unusual and this can help anticipate possible issues.

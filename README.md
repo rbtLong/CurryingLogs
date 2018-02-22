@@ -54,10 +54,10 @@ For instance, this is a simple database call for an API route. If it fails, we g
 
 ## What else?
 
-Logging done correctly could eliminate hours or days of troubleshooting. A good logging system could the administrators to anticipate
+Logging done correctly could eliminate hours or days of troubleshooting. A good logging system could allow the administrators to anticipate
 potential issues before a huge one occurrs. Another useful aspect of logging is it can help provide information and trace when
 necessary.
 
 As an extra step, I created a service that would aggregate a list of errors within the past 24 hours at the end of the day. Looking at the
 daily report enough times, a pattern begins to emerge. When a problem occurs, I can respond to it before the users complain. Sometimes, the
-report allows us to anticipate issues before an issue arises.
+report can do checks or display patterns that are unusual and this can help us anticipate possible issues.

@@ -29,26 +29,26 @@ For instance, this is a simple database call for an API route. If it fails, we g
 
 ```C#
 
-    const string cmdTemplate = "select * from _form_templates where id = @id and category = 'Course Forms (Pre-offer)' ";
+const string cmdTemplate = "select * from _form_templates where id = @id and category = 'Course Forms (Pre-offer)' ";
 
-    try
-    {
-        model = Db
-            .Forms
-            .Cmd(cmdTemplate)
-            .Param("@id", info.formid)
-            .Row();
-    }
-    catch (Exception ex)
-    {
-        ex.Error("[PZ Courses Edit] Error when trying to select the form templates.")
-            .Add("cmdTemplate", cmdTemplate)
-            .Add("model", model.Json())
-            .Add("input", info.Json())
-            .Ok();
+try
+{
+    model = Db
+        .Forms
+        .Cmd(cmdTemplate)
+        .Param("@id", info.formid)
+        .Row();
+}
+catch (Exception ex)
+{
+    ex.Error("[PZ Courses Edit] Error when trying to select the form templates.")
+        .Add("cmdTemplate", cmdTemplate)
+        .Add("model", model.Json())
+        .Add("input", info.Json())
+        .Ok();
 
-        return ex.Handle();
-    }
+    return ex.Handle();
+}
 
 ```
 

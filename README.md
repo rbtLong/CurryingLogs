@@ -12,7 +12,7 @@ Faculties and students would encounter bug sometimes and technicians could not r
 there would be bugs that students knew, but no one reported it. These are some of the embarassing situations
 were common-place on the student portal.
 
-To prevent an all-out-page-crash, a RESTful approach was used (when possible). Breaking **gigantic* operations
+To prevent an all-out-page-crash, a RESTful approach was used (when possible). Breaking **gigantic** operations
 into smaller units and wrapping each of those into a try-catch statements. Important operations that could
 fail should be inside a try-catch statements (e.g. database operations). When catching the error, supply as much
 information as possible such as variables and a simple and concise description of the error.

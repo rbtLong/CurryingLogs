@@ -92,7 +92,32 @@ catch (Exception ex)
 
 ```
 
-See the bottom for a complete example.
+(full code listed below)
+
+
+Here's an example of a database call to get the templates for forms.
+
+```C#
+try
+{
+    var templ = FormTemplateQueries.GetCourseFormTemplate(id);
+
+    if (ReferenceEquals(templ, null))
+        return templ.ToResult(0).Resp();
+        
+    return templ.ToResult(1).Resp();
+}
+catch (Exception ex)
+{
+    ex.Error("[PZCourses GetCourseFormTemplate] Error when trying to get course form template.")
+        .Add("formid", formid)
+        .Ok();
+
+    return ex.Handle();
+}
+```
+
+(full code listed below)
 
 ## Usage Flow
 
@@ -226,4 +251,58 @@ public static class AuditQueries
             .Rows();
     }
 }
+```
+
+### Get Form Template Records Complete
+
+```C#
+
+public class GetCourseFormTemplateController : ApiController
+{
+
+    public HttpResponseMessage Get(string formid)
+    {
+        if (PortalUser.Current.IsGuest)
+            return new HttpResponseMessage(HttpStatusCode.Unauthorized);
+
+        if (!PortalUser.Current.HasRole("Registrar")
+            && !PortalUser.Current.HasRole("Faculty")
+            && !PortalUser.Current.IsSiteAdmin)
+            return new HttpResponseMessage(HttpStatusCode.Forbidden);
+
+        if (!int.TryParse(formid, out var id))
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+
+        try
+        {
+            var templ = FormTemplateQueries.GetCourseFormTemplate(id);
+
+            if (ReferenceEquals(templ, null))
+                return templ.ToResult(0).Resp();
+
+            return templ.ToResult(1).Resp();
+        }
+        catch (Exception ex)
+        {
+            ex.Error("[PZCourses GetCourseFormTemplate] Error when trying to get course form template.")
+                .Add("formid", formid)
+                .Ok();
+
+            return ex.Handle();
+        }
+    }
+
+}
+
+public static class FormTemplateQueries
+{
+    public static Dictionary<string, object> GetCourseFormTemplate(int formid)
+    {
+        return Db.Forms
+            .Cmd("select * from _form_templates where id = @id and category like 'Course Forms%'")
+            .Param("@id", formid)
+            .Row();
+    }
+}
+
 ```

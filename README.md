@@ -110,8 +110,8 @@ try
 catch (Exception ex)
 {
     ex.Error("[PZCourses GetCourseFormTemplate] Error when trying to get course form template.")
-        .Add("formid", formid)
-        .Add("qGetTemplate", qGetTemplate)
+        .Add("formid", formid.ToString())
+        .Add("qGetTemplate", FormTemplateQueries.qGetTemplate)
         .Ok();
 
     return ex.Handle();
@@ -286,8 +286,8 @@ public class GetCourseFormTemplateController : ApiController
         catch (Exception ex)
         {
             ex.Error("[PZCourses GetCourseFormTemplate] Error when trying to get course form template.")
-                .Add("formid", formid)
-                .Add("qGetTemplate", qGetTemplate)
+                .Add("formid", formid.ToString())
+                .Add("qGetTemplate", FormTemplateQueries.qGetTemplate)
                 .Ok();
 
             return ex.Handle();

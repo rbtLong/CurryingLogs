@@ -104,13 +104,14 @@ try
 
     if (ReferenceEquals(templ, null))
         return templ.ToResult(0).Resp();
-        
+
     return templ.ToResult(1).Resp();
 }
 catch (Exception ex)
 {
     ex.Error("[PZCourses GetCourseFormTemplate] Error when trying to get course form template.")
         .Add("formid", formid)
+        .Add("qGetTemplate", qGetTemplate)
         .Ok();
 
     return ex.Handle();
@@ -286,6 +287,7 @@ public class GetCourseFormTemplateController : ApiController
         {
             ex.Error("[PZCourses GetCourseFormTemplate] Error when trying to get course form template.")
                 .Add("formid", formid)
+                .Add("qGetTemplate", qGetTemplate)
                 .Ok();
 
             return ex.Handle();
@@ -296,10 +298,12 @@ public class GetCourseFormTemplateController : ApiController
 
 public static class FormTemplateQueries
 {
+    public const string qGetTemplate = "select * from _form_templates where id = @id and category like 'Course Forms%'";
+
     public static Dictionary<string, object> GetCourseFormTemplate(int formid)
     {
         return Db.Forms
-            .Cmd("select * from _form_templates where id = @id and category like 'Course Forms%'")
+            .Cmd(qGetTemplate)
             .Param("@id", formid)
             .Row();
     }

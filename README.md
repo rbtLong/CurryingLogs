@@ -103,7 +103,7 @@ try
     var templ = FormTemplateQueries.GetCourseFormTemplate(id);
 
     if (ReferenceEquals(templ, null))
-        return templ.ToResult(0).Resp();
+        return "no data".ToResult(2).Resp();
 
     return templ.ToResult(1).Resp();
 }
@@ -279,7 +279,7 @@ public class GetCourseFormTemplateController : ApiController
             var templ = FormTemplateQueries.GetCourseFormTemplate(id);
 
             if (ReferenceEquals(templ, null))
-                return templ.ToResult(0).Resp();
+                return "no data".ToResult(2).Resp();
 
             return templ.ToResult(1).Resp();
         }

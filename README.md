@@ -25,32 +25,80 @@ Currying allows us to string together expressions and execute them.
 
 This is particularly useful when we need to supply important information inputs into a function.
 
-For instance, this is a simple database call for an API route. If it fails, we get all the input variables that was used during the problem.
+For instance, this a simple API route that searches for a user. This route is reserved only for a small
+group of administrators.
 
 ```C#
 
-const string cmdTemplate = "select * from _form_templates where id = @id and category = 'Course Forms (Pre-offer)' ";
-
 try
 {
-    model = Db
-        .Forms
-        .Cmd(cmdTemplate)
-        .Param("@id", info.formid)
-        .Row();
+    var users = PortalUserQueries.SearchPortalUser(q);
+
+    if (ReferenceEquals(users, null))
+        return "no data".ToResult(2).Resp();
+
+    return users.ToResult(1).Resp();
 }
-catch (Exception ex)
+catch(Exception ex)
 {
-    ex.Error("[PZ Courses Edit] Error when trying to select the form templates.")
-        .Add("cmdTemplate", cmdTemplate)
-        .Add("model", model.Json())
-        .Add("input", info.Json())
+    ex.Error("[Get Portal User] Error when trying to search for users via query.")
+        .Add("q", q)
+        .Add("qSearchPortalUser", PortalUserQueries.qSearchPortalUser)
         .Ok();
 
     return ex.Handle();
 }
 
 ```
+
+(full code listed below)
+
+We expect an array of rows in the form of Dictionary<string, object>[]. This is mimicking a JSON-like object and can be returned directly to the 
+front-end. We always expect a null case in which there are no results.
+
+The database operation here is `PortalUserQueries.SearchPortalUser(q)`, so we wrap it inside a try-catch clause. When an error occurs, we log the
+error via an extension method using our Curry log library. `ex.Error` begins the currying operation, we can supply additional information via the
+`Add` function. The `Ok` function commits the curry expression to our logging database. `ex.Handle()` is another extension method for Exception-based
+classes, returning a graceful message to the user in Release mode and reports an error message to us in Debug mode.
+
+When an error occurs, we can see the error (exception object), the original query, and the input that was provided. If it was a query error, we could
+run the query with the input that caused the error to see what happens. Otherwise, we can check the exception object to view the stack trace. 
+
+
+Here's an example of a database call to get the Audit Records of a specific form entry.
+
+```C#
+
+try
+{
+    var auds = AuditQueries.GetAuditRows(_recid, _formid);
+
+    if (ReferenceEquals(null, auds))
+        "no data".ToResult(2).Resp();
+
+    return auds.ToResult(1).Resp();
+}
+catch (Exception ex)
+{
+    ex.Error("[PZ Courses Audit] There was an error when trying to get audit courses.")
+        .Add("formid", formid)
+        .Add("recid", recid)
+        .Add("_formid (converted)", _formid.ToString())
+        .Add("_recid (converted)", _recid.ToString())
+        .Ok();
+
+    return ex.Handle();
+}
+
+```
+
+See the bottom for a complete example.
+
+## Usage Flow
+
+![Currying Log Usage Flow](https://docs.google.com/drawings/d/e/2PACX-1vT5e2LboGRC3eO-EDHMAHg9JexlUbfo6jmys0M49TnglKNLof6-Fe8mhzYj1DwO3f-6KmogpzO-ij01/pub?w=993&h=535 "CurryingLogUsageFlow" )
+
+
 
 ## What else?
 
@@ -61,3 +109,121 @@ necessary.
 As an extra step, I created a service that would aggregate a list of errors within the past 24 hours at the end of the day. Looking at the
 daily report enough times, a pattern begins to emerge. When a problem occurs, I can respond to it before the users complain. Sometimes, the
 report can do checks or display patterns that are unusual and this can help anticipate possible issues.
+
+
+## Full Code
+
+### Search Portal User Complete
+
+```C#
+public class PortalUserController : ApiController
+{
+    public HttpResponseMessage Post(string q)
+    {
+        if (PortalUser.Current.IsGuest)
+            return new HttpResponseMessage(HttpStatusCode.Unauthorized);
+
+        if (!PortalUser.Current.HasRole("Registrar")
+            && !PortalUser.Current.IsSiteAdmin)
+            return new HttpResponseMessage(HttpStatusCode.Forbidden);
+
+        if(String.IsNullOrEmpty(q))
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+
+        try
+        {
+            var users = PortalUserQueries.SearchPortalUser(q);
+
+            if (ReferenceEquals(users, null))
+                return "no data".ToResult(2).Resp();
+
+            return users.ToResult(1).Resp();
+        }
+        catch(Exception ex)
+        {
+            ex.Error("[Get Portal User] Error when trying to search for users via query.")
+                .Add("q", q)
+                .Add("qSearchPortalUser", PortalUserQueries.qSearchPortalUser)
+                .Ok();
+
+            return ex.Handle();
+        }
+
+    }
+}
+
+public static class PortalUserQueries
+{
+
+    public const string qSearchPortalUser = 
+    @"select (FirstName + ' ' + LastName) fullname, substring(hostid, 4, 20) cxid, email from fwk_user 
+      where FirstName like '%' + @name + '%' or LastName like '%' + @name + '%' or _users.cxid like '%' + @cxid + '%'; ";
+
+    public static Dictionary<string, object>[] SearchPortalUser(string q)
+    {
+        return Db.Jics
+            .Cmd(qSearchPortalUser)
+            .Param("@name", q)
+            .Param("@cxid", q)
+            .Rows();
+    }
+
+}
+```
+
+### Get Audit Records Complete
+
+```C#
+public class PZCoursesGetAuditRecsController : ApiController
+{
+
+    public HttpResponseMessage Get(string formid, string recid)
+    {
+        if (PortalUser.Current.IsGuest)
+            return new HttpResponseMessage(HttpStatusCode.Unauthorized);
+
+        if (!PortalUser.Current.HasRole("Registrar")
+            && !PortalUser.Current.HasRole("Faculty")
+            && !PortalUser.Current.IsSiteAdmin)
+            return new HttpResponseMessage(HttpStatusCode.Forbidden);
+
+        if (!int.TryParse(formid, out var _formid)
+            || !int.TryParse(recid, out var _recid))
+            return "bad input".ToResult(0).Resp();
+
+        try
+        {
+            var auds = AuditQueries.GetAuditRows(_recid, _formid);
+
+            if (ReferenceEquals(null, auds))
+                "no data".ToResult(2).Resp();
+
+            return auds.ToResult(1).Resp();
+        }
+        catch (Exception ex)
+        {
+            ex.Error("[PZ Courses Audit] There was an error when trying to get audit courses.")
+                .Add("formid", formid)
+                .Add("recid", recid)
+                .Add("_formid (converted)", _formid.ToString())
+                .Add("_recid (converted)", _recid.ToString())
+                .Ok();
+
+            return ex.Handle();
+        }
+        
+    }
+}
+
+public static class AuditQueries
+{
+    public static Dictionary<string, object>[] GetAuditRows(int recid, int formid)
+    {
+        return Db.Forms
+            .Proc("CourseForm_spGetAuditRecordsByRecId")
+            .Param("@recid", recid)
+            .Param("@formid", formid)
+            .Rows();
+    }
+}
+```

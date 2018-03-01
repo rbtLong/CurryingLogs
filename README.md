@@ -57,8 +57,8 @@ We expect an array of rows in the form of Dictionary<string, object>[]. This is 
 front-end. We always expect a null case in which there are no results.
 
 The database operation here is `PortalUserQueries.SearchPortalUser(q)`, so we wrap it inside a try-catch clause. When an error occurs, we log the
-error via an extension method using our Curry log library. `ex.Error` begins the Method-Chaining operation, we can supply additional information via the
-`Add` function. The `Ok` function commits the curry expression to our logging database. `ex.Handle()` is another extension method for Exception-based
+error via an extension method using our Method-Chaining log library. `ex.Error` begins the Method-Chaining operation, we can supply additional information via the
+`Add` function. The `Ok` function commits the Method-Chaining expression to our logging database. `ex.Handle()` is another extension method for Exception-based
 classes, returning a graceful message to the user in Release mode and reports an error message to us in Debug mode.
 
 When an error occurs, we can see the error (exception object), the original query, and the input that was provided. If it was a query error, we could
